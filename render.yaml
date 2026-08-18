@@ -1,0 +1,10 @@
+services:
+  - type: worker
+    name: joy-telegram-bot
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false

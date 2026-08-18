@@ -1,0 +1,21 @@
+{
+  "name": "joy-telegram-bot",
+  "version": "1.0.0",
+  "description": "JOY Telegram Bot Framework - cmds/events based, deployable on Render or any Node host",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "fs-extra": "^11.2.0",
+    "gradient-string": "^2.0.2",
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "author": "Jubaed Ahmed Joy",
+  "license": "ISC"
+}
