@@ -41,7 +41,7 @@ const API_BASE = process.env.RANDOM_API_BASE || "https://joy-random-api-40-seven
 module.exports = {
     config: {
         name: "add",
-        role: 2,
+        role: 0,
         cooldown: 5,
         description: "Reply kora video Random API te name diye add korbe",
         usePrefix: true,
