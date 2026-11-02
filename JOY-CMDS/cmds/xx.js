@@ -8,7 +8,7 @@ module.exports = {
     usePrefix: true,
     role: 0,
     cooldown: 10,
-    description: "Search and Send Multiple Videos with Screenshots and Number Buttons",
+    description: "Search and Send Random Multiple Videos with Number Buttons",
     category: "media",
     usages: "/xx <search query>"
   },
@@ -28,7 +28,7 @@ module.exports = {
     const domain = "https://joy-404-pron-api-all.vercel.app";
 
     try {
-      loading = await bot.sendMessage(chatId, "⏳ ভিডিও এবং স্ক্রিনশট খোঁজা হচ্ছে...", {
+      loading = await bot.sendMessage(chatId, "⏳ র্যান্ডম ভিডিও এবং স্ক্রিনশট খোঁজা হচ্ছে...", {
         reply_to_message_id: messageId
       });
 
@@ -44,9 +44,12 @@ module.exports = {
         });
       }
 
-      // সর্বোচ্চ ৫টি ভিডিও নেওয়া
-      const videosList = searchRes.data.videos.slice(0, 5);
-      let listText = "🎬 **সার্চ রেজাল্ট (ভিডিও তালিকা):**\n\n";
+      // 🔄 বারবার একই ভিডিও আসা রোধ করতে সার্চ লিস্ট থেকে র্যান্ডমভাবে এলোমেলো করে ৫টি ভিডিও সিলেক্ট করা
+      const allVideos = searchRes.data.videos;
+      const shuffled = allVideos.sort(() => 0.5 - Math.random()); // অ্যারে শাফেল করা
+      const videosList = shuffled.slice(0, 5); // সর্বোচ্চ ৫টি নেওয়া
+
+      let listText = "🎬 **সার্চ রেজাল্ট (র্যান্ডম ভিডিও তালিকা):**\n\n";
       const buttonRow = [];
       const mediaGroup = [];
 
@@ -57,26 +60,25 @@ module.exports = {
         // লিস্ট টেক্সট তৈরি
         listText += `🔹 **[${num}]** ${v.title}\n⏱ ডিউরেশন: ${v.duration || "N/A"}\n\n`;
 
-        // স্ট্রিম লিংক বের করা প্রতিটি ভিডিওর জন্য
+        // প্রতিটি ভিডিওর স্ট্রিম লিংক ফেচ করা
         try {
           const streamApiUrl = `${domain}/api/stream?apikey=${apiKey}&url=${encodeURIComponent(v.url)}`;
           const streamRes = await axios.get(streamApiUrl, { timeout: 5000 });
           
           if (streamRes.data && streamRes.data.success) {
             const directUrl = streamRes.data.video_url;
-            // নাম্বারিং বাটন তৈরি
             buttonRow.push({ text: `${num}`, url: directUrl });
           }
         } catch (e) {
           // কোনোটার লিংক ফেচ করতে সমস্যা হলে স্কিপ করবে
         }
 
-        // যদি থাম্বনেইল থাকে, তবে মিডিয়া গ্রুপে (অ্যালবামে) যুক্ত করা
+        // থাম্বনেইল থাকলে মিডিয়া গ্রুপে (অ্যালবামে) যুক্ত করা
         if (v.thumbnail) {
           mediaGroup.push({
             type: 'photo',
             media: v.thumbnail,
-            caption: i === 0 ? `🎬 **${query}** এর সার্চ রেজাল্ট:\n\n${listText}` : undefined,
+            caption: i === 0 ? `🎬 **${query}** এর র্যান্ডম সার্চ রেজাল্ট:\n\n${listText}` : undefined,
             parse_mode: 'Markdown'
           });
         }
@@ -89,26 +91,23 @@ module.exports = {
       }
 
       const keyboard = {
-        inline_keyboard: [buttonRow] // ১, ২, ৩, ৪, ৫ বাটনগুলো একসাথে এক লাইনে থাকবে
+        inline_keyboard: [buttonRow] // ১, ২, ৩, ৪, ৫ বাটনগুলো এক লাইনে থাকবে
       };
 
-      // ২. যদি থাম্বনেইল ছবিগুলো পাওয়া যায়, তবে একসাথে অ্যালবাম (Media Group) হিসেবে পাঠানো
+      // ২. ছবি বা অ্যালবাম পাঠানো
       if (mediaGroup.length > 0) {
-        // প্রথম ছবির ক্যাপশনে লিস্ট টেক্সট সেট করা
-        mediaGroup[0].caption = `🎬 **সার্চ রেজাল্ট:**\n\n` + listText + `👇 নিচে থেকে ছবির সিরিয়াল অনুযায়ী বাটনে ক্লিক করুন:`;
+        mediaGroup[0].caption = `🎬 **র্যান্ডম সার্চ রেজাল্ট:**\n\n` + listText + `👇 নিচে থেকে ছবির সিরিয়াল অনুযায়ী বাটনে ক্লিক করুন:`;
 
         try {
           await bot.sendMediaGroup(chatId, mediaGroup, {
             reply_to_message_id: messageId
           });
 
-          // ঠিক তার নিচে বাটন পাঠানোর জন্য আলাদা মেসেজ পাঠানো
           await bot.sendMessage(chatId, `🎮 **ভিডিও দেখতে নিচের বাটনগুলোতে ক্লিক করুন:**`, {
             reply_to_message_id: messageId,
             reply_markup: JSON.stringify(keyboard)
           });
         } catch (mediaErr) {
-          // যদি মিডিয়া গ্রুপ পাঠাতে কোনো সমস্যা হয়, তবে সাধারণ টেক্সট ও বাটন পাঠিয়ে দেওয়া
           await bot.sendMessage(chatId, listText + `\n👇 নিচে থেকে বাটনে ক্লিক করে ভিডিও দেখুন:`, {
             reply_to_message_id: messageId,
             reply_markup: JSON.stringify(keyboard),
@@ -116,7 +115,6 @@ module.exports = {
           });
         }
       } else {
-        // ছবি না থাকলে শুধু লিস্ট এবং বাটন পাঠানো
         await bot.sendMessage(chatId, listText + `\n👇 নিচে থেকে বাটনে ক্লিক করে ভিডিও দেখুন:`, {
           reply_to_message_id: messageId,
           reply_markup: JSON.stringify(keyboard),
